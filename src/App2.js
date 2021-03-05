@@ -18,17 +18,35 @@ import { Web3Provider } from "@ethersproject/providers";
 import { formatEther } from "@ethersproject/units";
 
 import {
+  injected,
   network,
   walletconnect,
+  walletlink,
+  ledger,
+  trezor,
+  frame,
   fortmatic,
   portis,
+  squarelink,
   torus,
+  authereum
 } from "./connectors";
 import { useEagerConnect, useInactiveListener } from "./hooks";
 import { Spinner } from "./Spinner";
 
 const connectorsByName = {
-  WalletConnect: walletconnect
+  Injected: injected,
+  Network: network,
+  WalletConnect: walletconnect,
+  WalletLink: walletlink,
+  Ledger: ledger,
+  Trezor: trezor,
+  Frame: frame,
+  Fortmatic: fortmatic,
+  Portis: portis,
+  Squarelink: squarelink,
+  Torus: torus,
+  Authereum: authereum
 };
 
 function getErrorMessage(error) {
@@ -166,6 +184,64 @@ function MyComponent() {
 
   return (
     <div style={{ padding: "1rem" }}>
+      <h1 style={{ margin: "0", textAlign: "right" }}>
+        {active ? "🟢" : error ? "🔴" : "🟠"}
+      </h1>
+      <h3
+        style={{
+          display: "grid",
+          gridGap: "1rem",
+          gridTemplateColumns: "1fr min-content 1fr",
+          maxWidth: "20rem",
+          lineHeight: "2rem",
+          margin: "auto"
+        }}
+      >
+        <span>Chain Id</span>
+        <span role="img" aria-label="chain">
+          ⛓
+        </span>
+        <span>{chainId === undefined ? "..." : chainId}</span>
+
+        <span>Block Number</span>
+        <span role="img" aria-label="numbers">
+          🔢
+        </span>
+        <span>
+          {blockNumber === undefined
+            ? "..."
+            : blockNumber === null
+            ? "Error"
+            : blockNumber.toLocaleString()}
+        </span>
+
+        <span>Account</span>
+        <span role="img" aria-label="robot">
+          🤖
+        </span>
+        <span>
+          {account === undefined
+            ? "..."
+            : account === null
+            ? "None"
+            : `${account.substring(0, 6)}...${account.substring(
+                account.length - 4
+              )}`}
+        </span>
+
+        <span>Balance</span>
+        <span role="img" aria-label="gold">
+          💰
+        </span>
+        <span>
+          {ethBalance === undefined
+            ? "..."
+            : ethBalance === null
+            ? "Error"
+            : `Ξ${parseFloat(formatEther(ethBalance)).toPrecision(4)}`}
+        </span>
+      </h3>
+      <hr style={{ margin: "2rem" }} />
       <div
         style={{
           display: "grid",
@@ -262,6 +338,8 @@ function MyComponent() {
         )}
       </div>
 
+      <hr style={{ margin: "2rem" }} />
+
       <div
         style={{
           display: "grid",
@@ -271,6 +349,45 @@ function MyComponent() {
           margin: "auto"
         }}
       >
+        {!!(library && account) && (
+          <button
+            style={{
+              height: "3rem",
+              borderRadius: "1rem",
+              cursor: "pointer"
+            }}
+            onClick={() => {
+              library
+                .getSigner(account)
+                .signMessage("👋")
+                .then(signature => {
+                  window.alert(`Success!\n\n${signature}`);
+                })
+                .catch(error => {
+                  window.alert(
+                    "Failure!" +
+                      (error && error.message ? `\n\n${error.message}` : "")
+                  );
+                });
+            }}
+          >
+            Sign Message
+          </button>
+        )}
+        {!!(connector === network && chainId) && (
+          <button
+            style={{
+              height: "3rem",
+              borderRadius: "1rem",
+              cursor: "pointer"
+            }}
+            onClick={() => {
+              connector.changeChainId(chainId === 1 ? 4 : 1);
+            }}
+          >
+            Switch Networks
+          </button>
+        )}
         {connector === walletconnect && (
           <button
             style={{
@@ -283,6 +400,64 @@ function MyComponent() {
             }}
           >
             Kill WalletConnect Session
+          </button>
+        )}
+        {connector === fortmatic && (
+          <button
+            style={{
+              height: "3rem",
+              borderRadius: "1rem",
+              cursor: "pointer"
+            }}
+            onClick={() => {
+              connector.close();
+            }}
+          >
+            Kill Fortmatic Session
+          </button>
+        )}
+        {connector === portis && (
+          <>
+            {chainId !== undefined && (
+              <button
+                style={{
+                  height: "3rem",
+                  borderRadius: "1rem",
+                  cursor: "pointer"
+                }}
+                onClick={() => {
+                  connector.changeNetwork(chainId === 1 ? 100 : 1);
+                }}
+              >
+                Switch Networks
+              </button>
+            )}
+            <button
+              style={{
+                height: "3rem",
+                borderRadius: "1rem",
+                cursor: "pointer"
+              }}
+              onClick={() => {
+                connector.close();
+              }}
+            >
+              Kill Portis Session
+            </button>
+          </>
+        )}
+        {connector === torus && (
+          <button
+            style={{
+              height: "3rem",
+              borderRadius: "1rem",
+              cursor: "pointer"
+            }}
+            onClick={() => {
+              connector.close();
+            }}
+          >
+            Kill Torus Session
           </button>
         )}
       </div>
